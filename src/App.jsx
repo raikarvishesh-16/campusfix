@@ -5,6 +5,7 @@ import { auth, db } from "./firebase"
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updatePassword,
   signOut,
   onAuthStateChanged
 } from "firebase/auth"
@@ -184,8 +185,6 @@ function formatComplaintDate(timestamp, includeTime = false) {
 }
 
 function App() {
-  console.log("Firebase connected:", auth, db)
-
   const [showSplash, setShowSplash] = useState(true)
   const [currentPage, setCurrentPage] = useState('welcome')
   const [registerStep, setRegisterStep] = useState(1)
@@ -199,8 +198,8 @@ function App() {
   const [notificationFilter, setNotificationFilter] = useState('All')
   const [notificationsRead, setNotificationsRead] = useState(false)
   const [settingsDialog, setSettingsDialog] = useState(null)
-  
-  // NEW: State to hold the fetched logged-in user's profile
+
+  // State to hold the fetched logged-in user's profile
   const [userData, setUserData] = useState(null)
 
   const [complaintData, setComplaintData] = useState({
@@ -219,23 +218,21 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        // User is logged in, fetch their Firestore document
         try {
-          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid))
           if (userDoc.exists()) {
-            setUserData(userDoc.data());
+            setUserData(userDoc.data())
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("Error fetching user data:", error)
         }
       } else {
-        // User is logged out
-        setUserData(null);
+        setUserData(null)
       }
-    });
+    })
 
-    return () => unsubscribe(); // Cleanup listener on unmount
-  }, []);
+    return () => unsubscribe()
+  }, [])
 
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0]
@@ -312,6 +309,13 @@ function App() {
     email: '',
     password: ''
   })
+
+  // First-time authority password change states
+  const [requirePasswordChange, setRequirePasswordChange] = useState(false)
+  const [pendingAuthorityProfile, setPendingAuthorityProfile] = useState(null)
+  const [newAuthorityPassword, setNewAuthorityPassword] = useState('')
+  const [confirmAuthorityPassword, setConfirmAuthorityPassword] = useState('')
+  const [updatingPassword, setUpdatingPassword] = useState(false)
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -445,7 +449,6 @@ function App() {
         ...document.data()
       }))
 
-      // Sort newest complaints first.
       complaints.sort((a, b) => {
         const dateA = a.createdAt?.toMillis?.() ?? 0
         const dateB = b.createdAt?.toMillis?.() ?? 0
@@ -571,7 +574,6 @@ function App() {
 
     setAuthorityLoading(true)
     try {
-      // Verify the account role again before loading all campus complaints.
       const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
       if (!userDoc.exists() || userDoc.data().role !== "authority") {
         await signOut(auth)
@@ -600,7 +602,7 @@ function App() {
     }
   }
 
-  // UPDATE COMPLAINT STATUS (Firestore rules allow this only for authority)
+  // UPDATE COMPLAINT STATUS
   const handleUpdateComplaintStatus = async (complaintId, newStatus) => {
     try {
       await updateDoc(doc(db, "issues", complaintId), {
@@ -622,7 +624,7 @@ function App() {
     }
   }
 
-  // HIGHER AUTHORITY LOGIN
+  // HIGHER AUTHORITY LOGIN (WITH WHITELIST + MANDATORY FIRST-TIME PASSWORD CHANGE)
   const handleAuthorityLogin = async (e) => {
     e.preventDefault()
 
@@ -632,13 +634,43 @@ function App() {
       const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password)
       const authSnap = await getDoc(doc(db, 'authorized_authorities', normalizedEmail))
 
-      if (!authSnap.exists() || authSnap.data().active !== true) {
+      if (normalizedEmail !== 'raikarvishesh@gmail.com' && (!authSnap.exists() || authSnap.data().active !== true)) {
         await signOut(auth)
         alert("Access Denied: Your email is not authorized for Higher Authority access.")
         return
       }
 
-      const authorityProfile = authSnap.data()
+      const authorityProfile = authSnap.exists()
+        ? authSnap.data()
+        : { name: 'Vishesh', designation: 'Admin' }
+
+      // Direct bypass for primary admin email so you can access immediately
+      if (normalizedEmail === 'raikarvishesh@gmail.com') {
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          email: normalizedEmail,
+          role: 'authority',
+          name: authorityProfile.name || 'Vishesh',
+          designation: authorityProfile.designation || 'Admin',
+          passwordUpdated: true
+        }, { merge: true })
+
+        setCurrentPage('authority-dashboard')
+        await handleLoadAuthorityComplaints()
+        return
+      }
+
+      // Check if other pre-created officials have updated their temporary password yet
+      const userSnap = await getDoc(doc(db, 'users', cred.user.uid))
+      if (!userSnap.exists() || userSnap.data().passwordUpdated !== true) {
+        setPendingAuthorityProfile({
+          email: normalizedEmail,
+          name: authorityProfile.name || 'Authority',
+          designation: authorityProfile.designation || 'Official'
+        })
+        setRequirePasswordChange(true)
+        return
+      }
+
       await setDoc(doc(db, 'users', cred.user.uid), {
         email: normalizedEmail,
         role: 'authority',
@@ -651,6 +683,52 @@ function App() {
     } catch (error) {
       console.error("Authority login error:", error)
       alert("Login failed: " + error.message)
+    }
+  }
+
+  // COMPLETE FIRST-TIME AUTHORITY PASSWORD CHANGE
+  const handleAuthorityPasswordUpdate = async (e) => {
+    e.preventDefault()
+
+    if (newAuthorityPassword.length < 6) {
+      alert("New password must be at least 6 characters.")
+      return
+    }
+
+    if (newAuthorityPassword !== confirmAuthorityPassword) {
+      alert("Passwords do not match.")
+      return
+    }
+
+    if (!auth.currentUser) {
+      alert("Session expired. Please sign in again.")
+      setRequirePasswordChange(false)
+      return
+    }
+
+    try {
+      setUpdatingPassword(true)
+      await updatePassword(auth.currentUser, newAuthorityPassword)
+
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
+        email: pendingAuthorityProfile?.email || auth.currentUser.email,
+        role: 'authority',
+        name: pendingAuthorityProfile?.name || 'Authority',
+        designation: pendingAuthorityProfile?.designation || 'Official',
+        passwordUpdated: true
+      }, { merge: true })
+
+      setRequirePasswordChange(false)
+      setPendingAuthorityProfile(null)
+      setNewAuthorityPassword('')
+      setConfirmAuthorityPassword('')
+      setCurrentPage('authority-dashboard')
+      await handleLoadAuthorityComplaints()
+    } catch (error) {
+      console.error("Password update error:", error)
+      alert("Could not update password: " + error.message)
+    } finally {
+      setUpdatingPassword(false)
     }
   }
 
@@ -674,6 +752,8 @@ function App() {
     setAuthorityData({ email: '', password: '' })
     setAuthorityComplaints([])
     setSelectedAuthorityComplaint(null)
+    setRequirePasswordChange(false)
+    setPendingAuthorityProfile(null)
     setCurrentPage('welcome')
   }
 
@@ -788,7 +868,7 @@ function App() {
     )
   }
 
-  // HIGHER AUTHORITY LOGIN PAGE
+  // HIGHER AUTHORITY LOGIN PAGE (NO SELF-REGISTRATION + FIRST-LOGIN PASSWORD UPDATE)
   if (currentPage === 'authority-login') {
     return (
       <main className="app-screen authority-login-screen">
@@ -796,32 +876,79 @@ function App() {
           <div className="authority-shield">🛡️</div>
           <span className="authority-login-kicker">CAMPUSFIX</span>
           <h1>CampusFix Operations Portal</h1>
-          <p className="authority-login-subtitle">Authorized Personnel Only</p>
+          <p className="authority-login-subtitle">
+            {requirePasswordChange ? 'Set Your Personal Password' : 'Authorized Personnel Only'}
+          </p>
 
-          <form className="authority-login-form" onSubmit={handleAuthorityLogin}>
-            <label htmlFor="authority-email">Official Email</label>
-            <input
-              id="authority-email"
-              type="email"
-              value={authorityData.email}
-              onChange={(e) => setAuthorityData((prev) => ({ ...prev, email: e.target.value }))}
-              placeholder="name@campus.edu"
-              autoComplete="username"
-              required
-            />
-            <label htmlFor="authority-password">Password</label>
-            <input
-              id="authority-password"
-              type="password"
-              value={authorityData.password}
-              onChange={(e) => setAuthorityData((prev) => ({ ...prev, password: e.target.value }))}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              required
-            />
-            <button type="submit">Sign In</button>
-          </form>
-          <button type="button" className="authority-back-link" onClick={() => setCurrentPage('welcome')}>← Back to App</button>
+          {requirePasswordChange ? (
+            <form className="authority-login-form" onSubmit={handleAuthorityPasswordUpdate}>
+              <p style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '12px', lineHeight: '1.4' }}>
+                First-time login detected for <strong>{pendingAuthorityProfile?.email}</strong>. Please replace your temporary password to continue.
+              </p>
+              <label htmlFor="new-authority-password">New Password</label>
+              <input
+                id="new-authority-password"
+                type="password"
+                value={newAuthorityPassword}
+                onChange={(e) => setNewAuthorityPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                autoComplete="new-password"
+                required
+              />
+              <label htmlFor="confirm-authority-password">Confirm New Password</label>
+              <input
+                id="confirm-authority-password"
+                type="password"
+                value={confirmAuthorityPassword}
+                onChange={(e) => setConfirmAuthorityPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                autoComplete="new-password"
+                required
+              />
+              <button type="submit" disabled={updatingPassword}>
+                {updatingPassword ? 'Saving Password...' : 'Save & Continue'}
+              </button>
+            </form>
+          ) : (
+            <form className="authority-login-form" onSubmit={handleAuthorityLogin}>
+              <label htmlFor="authority-email">Official Email</label>
+              <input
+                id="authority-email"
+                type="email"
+                value={authorityData.email}
+                onChange={(e) => setAuthorityData((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder="name@campus.edu"
+                autoComplete="username"
+                required
+              />
+              <label htmlFor="authority-password">Password</label>
+              <input
+                id="authority-password"
+                type="password"
+                value={authorityData.password}
+                onChange={(e) => setAuthorityData((prev) => ({ ...prev, password: e.target.value }))}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                required
+              />
+              <button type="submit">Sign In</button>
+            </form>
+          )}
+
+          <button
+            type="button"
+            className="authority-back-link"
+            onClick={async () => {
+              if (requirePasswordChange) {
+                await signOut(auth)
+                setRequirePasswordChange(false)
+                setPendingAuthorityProfile(null)
+              }
+              setCurrentPage('welcome')
+            }}
+          >
+            ← Back to App
+          </button>
           <p className="authority-security-note">Secure access for campus operations staff</p>
         </div>
       </main>
