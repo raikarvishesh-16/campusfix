@@ -22,11 +22,183 @@ import {
   updateDoc
 } from "firebase/firestore"
 
+function BottomNavigation({ currentPage, setCurrentPage, onViewMyComplaints }) {
+  const activePage = ['complaint-details'].includes(currentPage)
+    ? 'my-complaints'
+    : currentPage === 'notifications'
+      ? 'dashboard'
+      : currentPage
+
+  return (
+    <nav className="bottom-nav" aria-label="Main navigation">
+      <button className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentPage('dashboard')}>
+        <span className="nav-icon">⌂</span>
+        Home
+      </button>
+      <button className={`nav-item ${activePage === 'my-complaints' ? 'active' : ''}`} onClick={onViewMyComplaints}>
+        <span className="nav-icon">▤</span>
+        My Issues
+      </button>
+      <button className={`nav-item ${activePage === 'complaint' ? 'active' : ''}`} onClick={() => setCurrentPage('complaint')}>
+        <span className="nav-icon">＋</span>
+        Report
+      </button>
+      <button className={`nav-item ${activePage === 'profile' ? 'active' : ''}`} onClick={() => setCurrentPage('profile')}>
+        <span className="nav-icon">○</span>
+        Profile
+      </button>
+    </nav>
+  )
+}
+
+function AuthorityNavigation({ currentPage, onNavigate, onLogout }) {
+  const tabs = [
+    { page: 'authority-dashboard', label: 'Overview', icon: '⌂' },
+    { page: 'authority-queue', label: 'Queue', icon: '▤' },
+    { page: 'authority-analytics', label: 'Analytics', icon: '▥' }
+  ]
+
+  const renderTabs = (className) => (
+    <nav className={className} aria-label="Authority navigation">
+      {tabs.map((tab) => (
+        <button type="button" className={currentPage === tab.page ? 'active' : ''} key={tab.page} onClick={() => onNavigate(tab.page)}>
+          <span>{tab.icon}</span>{tab.label}
+        </button>
+      ))}
+      <button type="button" className="authority-logout-tab" onClick={onLogout}><span>↪</span>Logout</button>
+    </nav>
+  )
+
+  return (
+    <>
+      {renderTabs('authority-top-nav')}
+      {renderTabs('authority-bottom-nav')}
+    </>
+  )
+}
+
+function AuthorityPortal({ currentPage, setCurrentPage, onLogout, children }) {
+  return (
+    <main className="app-screen authority-portal-screen">
+      <div className="authority-container">
+        <header className="authority-brandbar">
+          <div className="authority-brandmark">CF</div>
+          <div><strong>CampusFix</strong><span>OPERATIONS PORTAL</span></div>
+          <span className="authority-verified">AUTHORIZED</span>
+        </header>
+        <AuthorityNavigation currentPage={currentPage} onNavigate={setCurrentPage} onLogout={onLogout} />
+        {children}
+      </div>
+    </main>
+  )
+}
+
+const categoryIcons = {
+  Electrical: '⚡',
+  Plumbing: '💧',
+  Cleanliness: '✨',
+  Furniture: '🪑',
+  Internet: '📶',
+  Other: '⌁'
+}
+
+const courses = ['MCA', 'Computer Science', 'M.Sc', 'MBA / IMBA', 'M.Com', 'MA', 'PhD', 'Other']
+
+const departments = [
+  'M.C.A Department',
+  'Computer Science',
+  'Botany',
+  'Mathematics',
+  'Physics',
+  'School of Chemical Sciences',
+  'Biotechnology',
+  'Microbiology',
+  'Zoology',
+  'School of Earth Ocean & Atmospheric Science',
+  'Electronics (USIC)',
+  'Goa Business School (MBA / IMBA / Commerce)',
+  'English',
+  'Hindi',
+  'Konkani',
+  'Marathi',
+  'French',
+  'Portuguese',
+  'History',
+  'Economics',
+  'Political Science',
+  'Sociology',
+  'Philosophy',
+  "Women's Studies",
+  'C.L.A.S',
+  'H.R.D.C',
+  'Administration / Estate Office'
+]
+
+const buildings = [
+  { label: 'Pure Science Building (Block-A)', value: 'Block-A (Pure Science)' },
+  { label: 'Arts Faculty Building (Block-B)', value: 'Block-B (Arts Faculty)' },
+  { label: 'Applied Science Building (Block-C)', value: 'Block-C (Applied Science)' },
+  { label: 'Old Management Building (Block-D)', value: 'Block-D (Old Management)' },
+  { label: 'New Science Building (Block-E)', value: 'Block-E (New Science)' },
+  { label: 'New Commerce Faculty (Block-F)', value: 'Block-F (New Commerce Faculty)' },
+  { label: 'Computer Science Lab Building', value: 'Computer Science Lab Building' },
+  { label: 'I.M.B.A Building', value: 'I.M.B.A Building' },
+  { label: 'U.S.I.C Building', value: 'U.S.I.C Building' },
+  { label: 'Library Building', value: 'Library Building' },
+  { label: 'Administrative Building', value: 'Administrative Building' },
+  { label: 'Examination Building', value: 'Examination Building' },
+  { label: 'C.L.A.S Building', value: 'C.L.A.S Building' },
+  { label: 'H.R.D.C Building', value: 'H.R.D.C Building' },
+  { label: 'Faculty Canteen', value: 'Faculty Canteen' },
+  { label: 'Gymnasium Building', value: 'Gymnasium Building' },
+  { label: 'Sports Building', value: 'Sports Building' },
+  { label: 'New Health Centre Building', value: 'New Health Centre Building' },
+  { label: "Men's Hostel-I", value: "Men's Hostel-I" },
+  { label: "Women's Hostel-I", value: "Women's Hostel-I" },
+  { label: 'PhD Girls Hostel-I', value: 'PhD Girls Hostel-I' },
+  { label: 'PhD Girls Hostel-II', value: 'PhD Girls Hostel-II' },
+  { label: 'PhD Boys Hostel-II', value: 'PhD Boys Hostel-II' },
+  { label: 'Renovated Ladies Hostel', value: 'Renovated Ladies Hostel' },
+  { label: 'Guest House', value: 'Guest House' },
+  { label: 'International Guest House', value: 'International Guest House' },
+  { label: 'Shopping Centre Complex', value: 'Shopping Centre Complex' },
+  { label: 'Residential Quarters', value: 'Residential Quarters' }
+]
+
+const authorityDivisions = [
+  'Engineering & Technical Division',
+  'Computer Centre / IT',
+  'Office of Estate Admin & Allied Services',
+  'Electrical Substation',
+  'Housekeeping & Sanitation',
+  'Hostel Warden Office'
+]
+
+function formatComplaintDate(timestamp, includeTime = false) {
+  const date = timestamp?.toDate?.() || (timestamp instanceof Date ? timestamp : null)
+  if (!date) return 'Date unavailable'
+
+  return date.toLocaleString(undefined, includeTime
+    ? { dateStyle: 'medium', timeStyle: 'short' }
+    : { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 function App() {
   console.log("Firebase connected:", auth, db)
 
   const [showSplash, setShowSplash] = useState(true)
   const [currentPage, setCurrentPage] = useState('welcome')
+  const [registerStep, setRegisterStep] = useState(1)
+  const [complaintStep, setComplaintStep] = useState(1)
+  const [complaintBuilding, setComplaintBuilding] = useState('')
+  const [complaintSpot, setComplaintSpot] = useState('')
+  const [lastSubmittedId, setLastSubmittedId] = useState('')
+  const [selectedComplaint, setSelectedComplaint] = useState(null)
+  const [complaintFilter, setComplaintFilter] = useState('All')
+  const [complaintSearch, setComplaintSearch] = useState('')
+  const [notificationFilter, setNotificationFilter] = useState('All')
+  const [notificationsRead, setNotificationsRead] = useState(false)
+  const [settingsDialog, setSettingsDialog] = useState(null)
   
   // NEW: State to hold the fetched logged-in user's profile
   const [userData, setUserData] = useState(null)
@@ -129,6 +301,12 @@ function App() {
   const [authorityComplaints, setAuthorityComplaints] = useState([])
   const [authorityLoading, setAuthorityLoading] = useState(false)
   const [authorityFilter, setAuthorityFilter] = useState('All')
+  const [authoritySearch, setAuthoritySearch] = useState('')
+  const [selectedAuthorityComplaint, setSelectedAuthorityComplaint] = useState(null)
+  const [authorityDepartment, setAuthorityDepartment] = useState(authorityDivisions[0])
+  const [authorityUpdateStatus, setAuthorityUpdateStatus] = useState('Pending')
+  const [authorityInternalNote, setAuthorityInternalNote] = useState('')
+  const [authorityAnalyticsPeriod, setAuthorityAnalyticsPeriod] = useState('This Week')
 
   const [authorityData, setAuthorityData] = useState({
     email: '',
@@ -194,16 +372,17 @@ function App() {
     try {
       setPhotoUploading(true)
       let photoDetails = {}
+      const location = [complaintBuilding, complaintSpot.trim()].filter(Boolean).join(' - ')
 
       if (complaintPhoto) {
         photoDetails = await uploadComplaintPhoto(complaintPhoto)
       }
 
-      await addDoc(collection(db, "issues"), {
+      const docRef = await addDoc(collection(db, "issues"), {
         title: complaintData.title.trim(),
         category: complaintData.category,
         description: complaintData.description.trim(),
-        location: complaintData.location.trim(),
+        location,
         ...photoDetails,
         reportedBy: auth.currentUser.uid,
         status: "Pending",
@@ -211,7 +390,16 @@ function App() {
         updatedAt: serverTimestamp()
       })
 
-      alert("Complaint submitted successfully!")
+      setLastSubmittedId(docRef.id)
+      setMyComplaints((previous) => [{
+        id: docRef.id,
+        ...complaintData,
+        title: complaintData.title.trim(),
+        description: complaintData.description.trim(),
+        location,
+        ...photoDetails,
+        status: 'Pending'
+      }, ...previous])
 
       setComplaintData({
         title: '',
@@ -219,8 +407,11 @@ function App() {
         description: '',
         location: ''
       })
+      setComplaintBuilding('')
+      setComplaintSpot('')
       handleRemovePhoto()
-      setCurrentPage('dashboard')
+      setComplaintStep(1)
+      setCurrentPage('submission-success')
 
     } catch (error) {
       console.error("Complaint submission error:", error)
@@ -270,9 +461,45 @@ function App() {
     }
   }
 
+  // Keep the dashboard's derived summaries current when it is opened.
+  useEffect(() => {
+    if (currentPage !== 'dashboard' || !auth.currentUser) return
+
+    let active = true
+    const loadDashboardComplaints = async () => {
+      setComplaintsLoading(true)
+      try {
+        const complaintsQuery = query(
+          collection(db, "issues"),
+          where("reportedBy", "==", auth.currentUser.uid)
+        )
+        const querySnapshot = await getDocs(complaintsQuery)
+        const complaints = querySnapshot.docs.map((document) => ({
+          id: document.id,
+          ...document.data()
+        }))
+        complaints.sort((a, b) => {
+          const dateA = a.createdAt?.toMillis?.() ?? 0
+          const dateB = b.createdAt?.toMillis?.() ?? 0
+          return dateB - dateA
+        })
+        if (active) setMyComplaints(complaints)
+      } catch (error) {
+        console.error("Loading dashboard complaints error:", error)
+        alert("Could not load complaints: " + error.message)
+      } finally {
+        if (active) setComplaintsLoading(false)
+      }
+    }
+
+    loadDashboardComplaints()
+    return () => { active = false }
+  }, [currentPage])
+
   // REGISTRATION FUNCTION
   const handleRegister = async (e) => {
     e.preventDefault()
+    if (registerStep !== 2) return
 
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!")
@@ -305,6 +532,7 @@ function App() {
       })
 
       alert("Account created successfully! Please log in.")
+      setRegisterStep(1)
       setCurrentPage('login')
 
     } catch (error) {
@@ -424,6 +652,29 @@ function App() {
     }
   }
 
+  const openAuthorityComplaint = (complaint) => {
+    const suggestedDepartments = {
+      Electrical: 'Electrical Substation',
+      Internet: 'Computer Centre / IT',
+      Cleanliness: 'Housekeeping & Sanitation',
+      Plumbing: 'Office of Estate Admin & Allied Services',
+      Furniture: 'Engineering & Technical Division'
+    }
+    setSelectedAuthorityComplaint(complaint)
+    setAuthorityDepartment(suggestedDepartments[complaint.category] || authorityDivisions[0])
+    setAuthorityUpdateStatus(complaint.status || 'Pending')
+    setAuthorityInternalNote('')
+    setCurrentPage('authority-update')
+  }
+
+  const handleAuthorityLogout = async () => {
+    await signOut(auth)
+    setAuthorityData({ email: '', password: '' })
+    setAuthorityComplaints([])
+    setSelectedAuthorityComplaint(null)
+    setCurrentPage('welcome')
+  }
+
   // Release the local photo preview URL when the component is removed.
   useEffect(() => {
     return () => {
@@ -538,273 +789,356 @@ function App() {
   // HIGHER AUTHORITY LOGIN PAGE
   if (currentPage === 'authority-login') {
     return (
-      <main className="register-screen">
-        <div className="register-card">
-          <h1>Higher Authority Login</h1>
-          <p>Sign in with your authorized account.</p>
+      <main className="app-screen authority-login-screen">
+        <div className="authority-login-card">
+          <div className="authority-shield">🛡️</div>
+          <span className="authority-login-kicker">CAMPUSFIX</span>
+          <h1>CampusFix Operations Portal</h1>
+          <p className="authority-login-subtitle">Authorized Personnel Only</p>
 
-          <form className="register-form" onSubmit={handleAuthorityLogin}>
-            <label>Official Email ID</label>
+          <form className="authority-login-form" onSubmit={handleAuthorityLogin}>
+            <label htmlFor="authority-email">Official Email</label>
             <input
+              id="authority-email"
               type="email"
               value={authorityData.email}
-              onChange={(e) =>
-                setAuthorityData((prev) => ({ ...prev, email: e.target.value }))
-              }
-              placeholder="Enter official email"
+              onChange={(e) => setAuthorityData((prev) => ({ ...prev, email: e.target.value }))}
+              placeholder="name@campus.edu"
+              autoComplete="username"
               required
             />
-
-            <label>Password</label>
+            <label htmlFor="authority-password">Password</label>
             <input
+              id="authority-password"
               type="password"
               value={authorityData.password}
-              onChange={(e) =>
-                setAuthorityData((prev) => ({ ...prev, password: e.target.value }))
-              }
-              placeholder="Enter password"
+              onChange={(e) => setAuthorityData((prev) => ({ ...prev, password: e.target.value }))}
+              placeholder="Enter your password"
+              autoComplete="current-password"
               required
             />
-
-            <button type="submit" className="register-button">
-              Login as Higher Authority
-            </button>
+            <button type="submit">Sign In</button>
           </form>
-
-          <button type="button" onClick={() => setCurrentPage('welcome')}>
-            Back to Home
-          </button>
+          <button type="button" className="authority-back-link" onClick={() => setCurrentPage('welcome')}>← Back to App</button>
+          <p className="authority-security-note">Secure access for campus operations staff</p>
         </div>
       </main>
     )
   }
 
-  // HIGHER AUTHORITY DASHBOARD
+  // AUTHORITY OPERATIONS OVERVIEW
   if (currentPage === 'authority-dashboard') {
-    const filteredAuthorityComplaints = authorityFilter === 'All'
-      ? authorityComplaints
-      : authorityComplaints.filter((complaint) => (complaint.status || 'Pending') === authorityFilter)
-
     const pendingCount = authorityComplaints.filter((item) => (item.status || 'Pending') === 'Pending').length
     const progressCount = authorityComplaints.filter((item) => item.status === 'In Progress').length
     const resolvedCount = authorityComplaints.filter((item) => item.status === 'Resolved').length
+    const now = new Date()
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7))
+    const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    const trendDays = weekdayLabels.map((label, index) => {
+      const day = new Date(monday)
+      day.setDate(monday.getDate() + index)
+      const count = authorityComplaints.filter((complaint) => {
+        const reportedAt = complaint.createdAt?.toDate?.()
+        return reportedAt
+          && reportedAt.getFullYear() === day.getFullYear()
+          && reportedAt.getMonth() === day.getMonth()
+          && reportedAt.getDate() === day.getDate()
+      }).length
+      return { label, count }
+    })
+    const maxTrendCount = Math.max(1, ...trendDays.map((day) => day.count))
+    const trendPoints = trendDays.map((day, index) => ({
+      x: 25 + index * 50,
+      y: 112 - (day.count / maxTrendCount) * 78,
+      ...day
+    }))
+    const trendPath = trendPoints.reduce((path, point, index) => {
+      if (index === 0) return `M ${point.x} ${point.y}`
+      const previous = trendPoints[index - 1]
+      const midpoint = (previous.x + point.x) / 2
+      return `${path} Q ${midpoint} ${previous.y} ${midpoint} ${(previous.y + point.y) / 2} Q ${point.x} ${point.y} ${point.x} ${point.y}`
+    }, '')
+    const trendAreaPath = `${trendPath} L ${trendPoints[trendPoints.length - 1].x} 126 L ${trendPoints[0].x} 126 Z`
+    const urgentComplaints = authorityComplaints
+      .filter((complaint) => (complaint.status || 'Pending') === 'Pending')
+      .slice(0, 5)
 
     return (
-      <main className="register-screen" style={{ alignItems: 'flex-start', padding: '24px 14px' }}>
-        <div className="register-card" style={{ width: '100%', maxWidth: '1000px', boxSizing: 'border-box' }}>
-          <h1>Higher Authority Dashboard</h1>
-          <p>Review campus complaints and update their progress.</p>
+      <AuthorityPortal currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleAuthorityLogout}>
+        <header className="operations-heading">
+          <div><span className="authority-eyebrow">CAMPUS OPERATIONS</span><h1>Operations Overview</h1><p>Monitor reports and coordinate campus response.</p></div>
+          <div className="operations-actions"><span className="live-badge"><i />Live</span><button type="button" className="refresh-icon-button" aria-label="Refresh complaints" onClick={handleLoadAuthorityComplaints} disabled={authorityLoading}>{authorityLoading ? '…' : '↻'}</button></div>
+        </header>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', margin: '22px 0' }}>
-            <div style={{ background: '#fff4e5', borderRadius: '12px', padding: '14px' }}>
-              <strong style={{ display: 'block', fontSize: '26px' }}>{pendingCount}</strong>
-              <span>Pending</span>
-            </div>
-            <div style={{ background: '#eaf2ff', borderRadius: '12px', padding: '14px' }}>
-              <strong style={{ display: 'block', fontSize: '26px' }}>{progressCount}</strong>
-              <span>In Progress</span>
-            </div>
-            <div style={{ background: '#e9f8ef', borderRadius: '12px', padding: '14px' }}>
-              <strong style={{ display: 'block', fontSize: '26px' }}>{resolvedCount}</strong>
-              <span>Resolved</span>
-            </div>
+        <section className="authority-kpi-grid" aria-label="Complaint totals">
+          <article className="authority-kpi pending-kpi"><span>Pending</span><strong>{pendingCount}</strong><small>Awaiting review</small><i>◷</i></article>
+          <article className="authority-kpi progress-kpi"><span>In Progress</span><strong>{progressCount}</strong><small>Being addressed</small><i>↗</i></article>
+          <article className="authority-kpi resolved-kpi"><span>Resolved</span><strong>{resolvedCount}</strong><small>Successfully closed</small><i>✓</i></article>
+        </section>
+
+        <section className="authority-panel trend-panel">
+          <div className="authority-panel-heading"><div><h2>Complaints Trend</h2><p>Last 7 Days · Reports received per day</p></div><span className="chart-legend"><i />Reports</span></div>
+          <div className="trend-chart">
+            <svg viewBox="0 0 350 158" role="img" aria-label="Complaints received Monday through Sunday">
+              <defs><linearGradient id="authorityTrendFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#2563eb" stopOpacity=".22" /><stop offset="100%" stopColor="#2563eb" stopOpacity="0" /></linearGradient></defs>
+              {[34, 73, 112].map((y) => <line key={y} x1="25" y1={y} x2="325" y2={y} className="chart-grid-line" />)}
+              <path d={trendAreaPath} fill="url(#authorityTrendFill)" />
+              <path d={trendPath} className="trend-line" />
+              {trendPoints.map((point) => <g key={point.label}><circle cx={point.x} cy={point.y} r="3.5" className="trend-point" /><text x={point.x} y="148" textAnchor="middle" className="chart-day-label">{point.label}</text></g>)}
+            </svg>
           </div>
+        </section>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-            <label style={{ flex: '1 1 180px' }}>
-              Filter complaints
-              <select
-                value={authorityFilter}
-                onChange={(e) => setAuthorityFilter(e.target.value)}
-                style={{ display: 'block', width: '100%', marginTop: '6px', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-              >
-                <option value="All">All complaints</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-              </select>
-            </label>
-            <button type="button" className="register-button" onClick={handleLoadAuthorityComplaints}>
-              Refresh Complaints
-            </button>
-          </div>
-
-          {authorityLoading ? (
-            <p>Loading campus complaints...</p>
-          ) : filteredAuthorityComplaints.length === 0 ? (
-            <p>No complaints found for this filter.</p>
+        <section className="authority-panel urgent-panel">
+          <div className="authority-panel-heading"><div><h2>Urgent Issues</h2><p>Pending reports requiring attention</p></div><span className="urgent-count">{pendingCount}</span></div>
+          {authorityLoading ? <p className="authority-empty">Loading complaints…</p> : urgentComplaints.length === 0 ? (
+            <p className="authority-empty">No pending issues need attention.</p>
           ) : (
-            <div style={{ display: 'grid', gap: '14px' }}>
-              {filteredAuthorityComplaints.map((complaint) => (
-                <article key={complaint.id} style={{ border: '1px solid #dbe2ea', borderRadius: '12px', padding: '16px', textAlign: 'left', overflowWrap: 'anywhere' }}>
-                  <h3 style={{ marginTop: 0, marginBottom: '10px' }}>{complaint.title || 'Untitled complaint'}</h3>
-                  <p><strong>Report ID:</strong> {complaint.id}</p>
-                  <p><strong>Category:</strong> {complaint.category || 'Not specified'}</p>
-                  <p><strong>Location:</strong> {complaint.location || 'Not specified'}</p>
-                  <p><strong>Description:</strong> {complaint.description || 'No description provided'}</p>
-                  {complaint.photoUrl && (
-                    <div style={{ margin: '12px 0' }}>
-                      <strong>Attached Photo:</strong>
-                      <a href={complaint.photoUrl} target="_blank" rel="noreferrer">
-                        <img src={complaint.photoUrl} alt="Complaint evidence" style={{ display: 'block', width: '100%', maxWidth: '280px', maxHeight: '220px', objectFit: 'cover', borderRadius: '10px', marginTop: '8px' }} />
-                      </a>
-                    </div>
-                  )}
-                  <p><strong>Reported:</strong> {complaint.createdAt?.toDate ? complaint.createdAt.toDate().toLocaleString() : 'Date unavailable'}</p>
-                  <label style={{ display: 'block', marginTop: '12px', fontWeight: 600 }}>
-                    Complaint status
-                    <select
-                      value={complaint.status || 'Pending'}
-                      onChange={(e) => handleUpdateComplaintStatus(complaint.id, e.target.value)}
-                      style={{ display: 'block', width: '100%', maxWidth: '320px', marginTop: '6px', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff' }}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Resolved">Resolved</option>
-                    </select>
-                  </label>
+            <div className="urgent-list">
+              {urgentComplaints.map((complaint) => (
+                <article className="urgent-item" key={complaint.id}>
+                  <span className="urgent-icon">{categoryIcons[complaint.category] || '!'}</span>
+                  <div className="urgent-copy"><strong>{complaint.title || 'Untitled complaint'}</strong><span>{complaint.location || 'Location not specified'} · {formatComplaintDate(complaint.createdAt)}</span></div>
+                  <button type="button" onClick={() => openAuthorityComplaint(complaint)}>View <span>→</span></button>
                 </article>
               ))}
             </div>
           )}
+        </section>
+      </AuthorityPortal>
+    )
+  }
 
-          <button
-            type="button"
-            style={{ marginTop: '22px' }}
-            onClick={async () => {
-              await signOut(auth)
-              setAuthorityData({ email: '', password: '' })
-              setAuthorityComplaints([])
-              setCurrentPage('welcome')
-            }}
-          >
-            Logout
-          </button>
+  if (currentPage === 'authority-queue') {
+    const searchTerm = authoritySearch.trim().toLowerCase()
+    const filteredAuthorityComplaints = authorityComplaints.filter((complaint) => {
+      const matchesStatus = authorityFilter === 'All' || (complaint.status || 'Pending') === authorityFilter
+      const matchesSearch = !searchTerm
+        || (complaint.id || '').toLowerCase().includes(searchTerm)
+        || (complaint.title || '').toLowerCase().includes(searchTerm)
+        || (complaint.location || '').toLowerCase().includes(searchTerm)
+      return matchesStatus && matchesSearch
+    })
+
+    return (
+      <AuthorityPortal currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleAuthorityLogout}>
+        <header className="operations-heading queue-heading">
+          <div><span className="authority-eyebrow">ALL CAMPUS REPORTS</span><h1>Complaint Queue</h1><p>{authorityComplaints.length} reports · Review and assign work</p></div>
+          <button type="button" className="refresh-icon-button" aria-label="Refresh complaints" onClick={handleLoadAuthorityComplaints} disabled={authorityLoading}>{authorityLoading ? '…' : '↻'}</button>
+        </header>
+        <label className="authority-search"><span>⌕</span><input type="search" value={authoritySearch} onChange={(event) => setAuthoritySearch(event.target.value)} placeholder="Search by ID, title, or location..." aria-label="Search by ID, title, or location" /></label>
+        <div className="authority-filter-pills" role="tablist" aria-label="Filter queue by status">
+          {['All', 'Pending', 'In Progress', 'Resolved'].map((filter) => <button type="button" role="tab" aria-selected={authorityFilter === filter} className={authorityFilter === filter ? 'selected' : ''} key={filter} onClick={() => setAuthorityFilter(filter)}>{filter}</button>)}
         </div>
-      </main>
+        <section className="authority-panel queue-panel">
+          <div className="queue-list-heading"><span>REPORT</span><span>STATUS</span></div>
+          {authorityLoading ? <p className="authority-empty">Loading campus complaints…</p> : filteredAuthorityComplaints.length === 0 ? (
+            <p className="authority-empty">No complaints match your search or filter.</p>
+          ) : (
+            <div className="authority-queue-list">
+              {filteredAuthorityComplaints.map((complaint) => (
+                <button type="button" className="authority-queue-item" key={complaint.id} onClick={() => openAuthorityComplaint(complaint)}>
+                  <span className="queue-category-icon">{categoryIcons[complaint.category] || '⌁'}</span>
+                  <span className="queue-item-copy">
+                    <strong>{complaint.title || 'Untitled complaint'}</strong>
+                    <small>#{complaint.id} · {complaint.category || 'Other'}</small>
+                    <span>{complaint.location || 'Location not specified'}{complaint.photoUrl && <em>▧ Photo</em>}</span>
+                  </span>
+                  <span className={`complaint-status ${(complaint.status || 'Pending').toLowerCase().replace(/\s+/g, '-')}`}>{complaint.status || 'Pending'}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      </AuthorityPortal>
+    )
+  }
+
+  if (currentPage === 'authority-update') {
+    const authorityComplaint = selectedAuthorityComplaint
+      ? authorityComplaints.find((complaint) => complaint.id === selectedAuthorityComplaint.id) || selectedAuthorityComplaint
+      : null
+
+    if (!authorityComplaint) {
+      return (
+        <AuthorityPortal currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleAuthorityLogout}>
+          <p className="authority-empty">Select a complaint from the queue to view its details.</p>
+          <button type="button" className="authority-primary-button" onClick={() => setCurrentPage('authority-queue')}>Open Complaint Queue</button>
+        </AuthorityPortal>
+      )
+    }
+
+    return (
+      <AuthorityPortal currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleAuthorityLogout}>
+        <button type="button" className="authority-back-button" onClick={() => setCurrentPage('authority-queue')}>← Back to Queue</button>
+        <header className="operations-heading update-heading"><div><span className="authority-eyebrow">COMPLAINT ASSIGNMENT</span><h1>Review & Update</h1><p>#{authorityComplaint.id}</p></div><span className={`complaint-status ${(authorityComplaint.status || 'Pending').toLowerCase().replace(/\s+/g, '-')}`}>{authorityComplaint.status || 'Pending'}</span></header>
+        <article className="authority-panel update-detail-card">
+          {authorityComplaint.photoUrl && <a className="authority-photo-link" href={authorityComplaint.photoUrl} target="_blank" rel="noreferrer"><img src={authorityComplaint.photoUrl} alt="Attached complaint evidence" /></a>}
+          <div className="update-complaint-meta"><span>{categoryIcons[authorityComplaint.category] || '⌁'} {authorityComplaint.category || 'Other'}</span><span>◷ {formatComplaintDate(authorityComplaint.createdAt, true)}</span></div>
+          <h2>{authorityComplaint.title || 'Untitled complaint'}</h2>
+          <p className="update-location">⌖ {authorityComplaint.location || 'Location not specified'}</p>
+          <p className="update-description">{authorityComplaint.description || 'No description provided.'}</p>
+          <dl className="update-report-id"><dt>REPORT ID</dt><dd>{authorityComplaint.id}</dd></dl>
+        </article>
+        <section className="authority-panel assignment-panel">
+          <div className="authority-panel-heading"><div><h2>Assignment & Status</h2><p>Coordinate a response for this issue.</p></div></div>
+          <label>Assign Department
+            <select value={authorityDepartment} onChange={(event) => setAuthorityDepartment(event.target.value)}>
+              {authorityDivisions.map((department) => <option key={department}>{department}</option>)}
+            </select>
+          </label>
+          <label>Status
+            <select value={authorityUpdateStatus} onChange={(event) => setAuthorityUpdateStatus(event.target.value)}>
+              {['Pending', 'In Progress', 'Resolved'].map((status) => <option key={status}>{status}</option>)}
+            </select>
+          </label>
+          <label>Add Internal Note (optional)
+            <textarea value={authorityInternalNote} onChange={(event) => setAuthorityInternalNote(event.target.value)} rows="4" placeholder="Add context for the operations team…" />
+          </label>
+          <button type="button" className="authority-primary-button" onClick={() => handleUpdateComplaintStatus(authorityComplaint.id, authorityUpdateStatus)}>Update Status</button>
+          <p className="internal-note-hint">Department assignment and internal notes are for this session only.</p>
+        </section>
+      </AuthorityPortal>
+    )
+  }
+
+  if (currentPage === 'authority-analytics') {
+    const now = new Date()
+    const periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    if (authorityAnalyticsPeriod === 'This Week') {
+      periodStart.setDate(periodStart.getDate() - ((periodStart.getDay() + 6) % 7))
+    } else if (authorityAnalyticsPeriod === 'This Month') {
+      periodStart.setDate(1)
+    } else {
+      periodStart.setMonth(0, 1)
+    }
+    const periodComplaints = authorityComplaints.filter((complaint) => {
+      const reportedAt = complaint.createdAt?.toDate?.()
+      return !reportedAt || (reportedAt >= periodStart && reportedAt <= now)
+    })
+    const totalPeriodComplaints = periodComplaints.length
+    const periodResolvedCount = periodComplaints.filter((complaint) => complaint.status === 'Resolved').length
+    const periodPendingCount = periodComplaints.filter((complaint) => (complaint.status || 'Pending') === 'Pending').length
+    const periodProgressCount = periodComplaints.filter((complaint) => complaint.status === 'In Progress').length
+    const resolvedRate = totalPeriodComplaints ? Math.round((periodResolvedCount / totalPeriodComplaints) * 100) : 0
+    const donutCircumference = 2 * Math.PI * 43
+    const locationCounts = periodComplaints.reduce((counts, complaint) => {
+      const location = complaint.location?.trim() || 'Unspecified'
+      counts[location] = (counts[location] || 0) + 1
+      return counts
+    }, {})
+    const topLocations = Object.entries(locationCounts)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 5)
+    const maxLocationCount = Math.max(1, ...topLocations.map(([, count]) => count))
+
+    return (
+      <AuthorityPortal currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleAuthorityLogout}>
+        <header className="operations-heading analytics-heading"><div><span className="authority-eyebrow">PERFORMANCE REPORTS</span><h1>Analytics & Reports</h1><p>Campus issue resolution at a glance.</p></div></header>
+        <div className="analytics-period-pills" role="tablist" aria-label="Analytics reporting period">
+          {['This Week', 'This Month', 'This Year'].map((period) => <button type="button" role="tab" aria-selected={authorityAnalyticsPeriod === period} className={authorityAnalyticsPeriod === period ? 'selected' : ''} key={period} onClick={() => setAuthorityAnalyticsPeriod(period)}>{period}</button>)}
+        </div>
+        <section className="authority-panel analytics-donut-panel">
+          <div className="authority-panel-heading"><div><h2>Resolution Rate</h2><p>{authorityAnalyticsPeriod} · Complaint outcomes</p></div><span className="analytics-total">{totalPeriodComplaints} total</span></div>
+          <div className="analytics-donut-layout">
+            <div className="donut-chart">
+              <svg viewBox="0 0 110 110" role="img" aria-label={`${resolvedRate}% of complaints resolved`}>
+                <circle cx="55" cy="55" r="43" className="donut-track" />
+                <circle cx="55" cy="55" r="43" className="donut-resolved" strokeDasharray={donutCircumference} strokeDashoffset={donutCircumference * (1 - resolvedRate / 100)} />
+              </svg>
+              <div><strong>{resolvedRate}%</strong><span>Resolved</span></div>
+            </div>
+            <div className="donut-legend">
+              <div><i className="legend-resolved" /><span>Resolved</span><strong>{periodResolvedCount}</strong></div>
+              <div><i className="legend-pending" /><span>Pending</span><strong>{periodPendingCount}</strong></div>
+              <div><i className="legend-progress" /><span>In Progress</span><strong>{periodProgressCount}</strong></div>
+            </div>
+          </div>
+        </section>
+        <section className="authority-panel top-locations-panel">
+          <div className="authority-panel-heading"><div><h2>Top Locations</h2><p>Reports by campus location</p></div><span className="location-period-label">{authorityAnalyticsPeriod}</span></div>
+          {topLocations.length === 0 ? <p className="authority-empty">No location reports for this period.</p> : (
+            <div className="location-bars">
+              {topLocations.map(([location, count], index) => (
+                <div className="location-bar-row" key={location}>
+                  <div className="location-bar-label"><span><i>{index + 1}</i>{location}</span><strong>{count}</strong></div>
+                  <div className="location-bar-track"><span style={{ width: `${(count / maxLocationCount) * 100}%` }} /></div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </AuthorityPortal>
     )
   }
 
   // REGISTRATION PAGE
   if (currentPage === 'register') {
+    const continueRegistration = () => {
+      const stepForm = document.getElementById('register-step-one')
+      if (stepForm?.reportValidity()) setRegisterStep(2)
+    }
+
     return (
       <main className="register-screen">
-        <div className="register-card">
+        <div className="register-card wizard-card">
           <h1>Create Account</h1>
           <p>Join CampusFix and help improve your campus.</p>
 
-          <form className="register-form" onSubmit={handleRegister}>
-            <label>First Name</label>
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="Enter first name"
-              required
-            />
+          <div className="wizard-stepper" aria-label="Registration progress">
+            <div className={`step-indicator ${registerStep === 1 ? 'current' : 'complete'}`}><span>1</span><strong>Personal Details</strong></div>
+            <div className={`step-indicator ${registerStep === 2 ? 'current' : ''}`}><span>2</span><strong>Account Setup</strong></div>
+          </div>
 
-            <label>Last Name</label>
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Enter last name"
-              required
-            />
-
-            <label>PR Number</label>
-            <input
-              type="text"
-              name="prNumber"
-              value={formData.prNumber}
-              onChange={handleChange}
-              placeholder="Enter PR number"
-              required
-            />
-
-            <label>Department</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              placeholder="Enter department"
-              required
-            />
-
-            <label>Course</label>
-            <select
-              name="course"
-              value={formData.course}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select course</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="MCA">MCA</option>
-            </select>
-
-            <label>Phone Number</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter phone number"
-              required
-            />
-
-            <label>College Email ID</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter college email"
-              required
-            />
-
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create password"
-              required
-            />
-
-            <label>Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm password"
-              required
-            />
-
-            <label>Account Type</label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-            >
-              <option value="student">Student</option>
-              <option value="faculty">Faculty</option>
-            </select>
-
-            <button type="submit" className="register-button">
-              Create Account
-            </button>
+          <form id="register-step-one" className="register-form" onSubmit={handleRegister}>
+            {registerStep === 1 ? (
+              <div className="step-form">
+                <label htmlFor="firstName">First Name</label>
+                <input id="firstName" type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" required />
+                <label htmlFor="lastName">Last Name</label>
+                <input id="lastName" type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter last name" required />
+                <label htmlFor="prNumber">PR Number</label>
+                <input id="prNumber" type="text" name="prNumber" value={formData.prNumber} onChange={handleChange} placeholder="Enter PR number" required />
+                <label htmlFor="department">Department</label>
+                <select id="department" name="department" value={formData.department} onChange={handleChange} required>
+                  <option value="">Select department</option>
+                  {departments.map((department) => <option key={department} value={department}>{department}</option>)}
+                </select>
+                <label htmlFor="course">Course</label>
+                <select id="course" name="course" value={formData.course} onChange={handleChange} required>
+                  <option value="">Select course</option>
+                  {courses.map((course) => <option key={course} value={course}>{course}</option>)}
+                </select>
+                <span className="form-field-label">I am a</span>
+                <div className="role-pills">
+                  <label className={formData.role === 'student' ? 'selected' : ''}>
+                    <input type="radio" name="role" value="student" checked={formData.role === 'student'} onChange={handleChange} /> Student
+                  </label>
+                  <label className={formData.role === 'faculty' ? 'selected' : ''}>
+                    <input type="radio" name="role" value="faculty" checked={formData.role === 'faculty'} onChange={handleChange} /> Faculty
+                  </label>
+                </div>
+                <button type="button" className="register-button" onClick={continueRegistration}>Continue to Account Setup</button>
+              </div>
+            ) : (
+              <div className="step-form">
+                <label htmlFor="phone">Phone Number</label>
+                <input id="phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="Enter phone number" required />
+                <label htmlFor="register-email">College Email ID</label>
+                <input id="register-email" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter college email" required />
+                <label htmlFor="register-password">Password</label>
+                <input id="register-password" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Create password" required />
+                <label htmlFor="confirm-password">Confirm Password</label>
+                <input id="confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm password" required />
+                <button type="submit" className="register-button">Create Account</button>
+                <button type="button" className="wizard-back" onClick={() => setRegisterStep(1)}>Back to Personal Details</button>
+              </div>
+            )}
           </form>
 
           <button
             type="button"
-            onClick={() => setCurrentPage('access-choice')}
+            onClick={() => { setRegisterStep(1); setCurrentPage('access-choice') }}
           >
             Back
           </button>
@@ -815,228 +1149,433 @@ function App() {
 
   // REPORT COMPLAINT PAGE
   if (currentPage === 'complaint') {
+    const continueComplaint = () => {
+      if (complaintStep === 1 && !complaintData.category) {
+        alert('Please select an issue category.')
+        return
+      }
+      if (complaintStep === 2 && !complaintBuilding) {
+        alert('Please select a building or block.')
+        return
+      }
+      setComplaintStep((step) => Math.min(step + 1, 3))
+    }
+
+    const categories = [
+      ['Electrical', '⚡'],
+      ['Plumbing', '💧'],
+      ['Cleanliness', '✨'],
+      ['Furniture', '🪑'],
+      ['Internet', '📶'],
+      ['Other', '•••']
+    ]
+
     return (
       <main className="register-screen">
-        <div className="register-card">
-          <h1>Report a Campus Issue</h1>
-          <p>Tell us about the problem on your campus.</p>
-
-          <form
-            className="register-form"
-            onSubmit={handleSubmitComplaint}
-          >
-            <label>Complaint Title</label>
-            <input
-              type="text"
-              name="title"
-              value={complaintData.title}
-              onChange={handleComplaintChange}
-              placeholder="Enter complaint title"
-              required
-            />
-
-            <label>Category</label>
-            <select
-              name="category"
-              value={complaintData.category}
-              onChange={handleComplaintChange}
-              required
-            >
-              <option value="">Select category</option>
-              <option value="Electrical">Electrical</option>
-              <option value="Plumbing">Plumbing</option>
-              <option value="Cleanliness">Cleanliness</option>
-              <option value="Furniture">Furniture</option>
-              <option value="Internet">Internet</option>
-              <option value="Other">Other</option>
-            </select>
-
-            <label>Description</label>
-            <textarea
-              name="description"
-              value={complaintData.description}
-              onChange={handleComplaintChange}
-              placeholder="Describe the issue..."
-              rows="4"
-              required
-            />
-
-            <label>Campus Location</label>
-            <input
-              type="text"
-              name="location"
-              value={complaintData.location}
-              onChange={handleComplaintChange}
-              placeholder="Enter building or room location"
-              required
-            />
-
-            <label>Photo Evidence (Optional — one photo)</label>
-            <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: '14px' }}>
-              Choose one image of the issue from your gallery. Maximum size: 5 MB.
-            </p>
-            <input
-              id="complaint-gallery-input"
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-              style={{ display: 'block', width: '100%', margin: '10px 0' }}
-            />
-            <label htmlFor="complaint-gallery-input" style={{ fontSize: '13px' }}>Choose from gallery</label>
-
-            {photoPreview && (
-              <div style={{ margin: '12px 0', textAlign: 'left' }}>
-                <strong>Photo preview</strong>
-                <img src={photoPreview} alt="Selected complaint evidence preview" style={{ display: 'block', width: '100%', maxWidth: '280px', maxHeight: '220px', objectFit: 'cover', borderRadius: '10px', marginTop: '8px' }} />
-                <button type="button" onClick={handleRemovePhoto} style={{ marginTop: '8px' }}>
-                  Remove Photo
-                </button>
+        <div className="register-card wizard-card">
+          <button type="button" className="back-link" onClick={() => setCurrentPage('dashboard')}>← Home</button>
+          <h1>Report an Issue</h1>
+          <p>Help us make your campus better.</p>
+          <div className="wizard-stepper" aria-label="Report progress">
+            {['Issue', 'Location', 'Details'].map((label, index) => (
+              <div key={label} className={`step-indicator ${complaintStep === index + 1 ? 'current' : complaintStep > index + 1 ? 'complete' : ''}`}>
+                <span>{index + 1}</span><strong>{label}</strong>
               </div>
+            ))}
+          </div>
+
+          <form className="register-form" onSubmit={handleSubmitComplaint}>
+            {complaintStep === 1 && (
+              <section className="step-form">
+                <span className="form-field-label">What needs attention?</span>
+                <div className="category-grid">
+                  {categories.map(([category, icon]) => (
+                    <button type="button" key={category} className={`category-option ${complaintData.category === category ? 'selected' : ''}`} onClick={() => setComplaintData((previous) => ({ ...previous, category }))}>
+                      <span>{icon}</span>{category}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="register-button" onClick={continueComplaint}>Choose Location</button>
+              </section>
             )}
-
-            <button type="submit" className="register-button" disabled={photoUploading}>
-              {photoUploading ? 'Uploading Photo...' : 'Submit Complaint'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCurrentPage('dashboard')}
-            >
-              Back to Dashboard
-            </button>
+            {complaintStep === 2 && (
+              <section className="step-form">
+                <label htmlFor="complaint-building">Building / Block</label>
+                <select id="complaint-building" value={complaintBuilding} onChange={(event) => setComplaintBuilding(event.target.value)} required>
+                  <option value="">Select a building or block</option>
+                  {buildings.map(({ label, value }) => <option key={value} value={value}>{label}</option>)}
+                </select>
+                <label htmlFor="complaint-spot">Room / Floor / Specific Spot</label>
+                <input id="complaint-spot" type="text" value={complaintSpot} onChange={(event) => setComplaintSpot(event.target.value)} placeholder="e.g. Lab 2, second floor" />
+                <button type="button" className="register-button" onClick={continueComplaint}>Add Details</button>
+                <button type="button" className="wizard-back" onClick={() => setComplaintStep(1)}>Back to Issue</button>
+              </section>
+            )}
+            {complaintStep === 3 && (
+              <section className="step-form">
+                <label htmlFor="complaint-title">Complaint Title</label>
+                <input id="complaint-title" type="text" name="title" value={complaintData.title} onChange={handleComplaintChange} placeholder="Give the issue a short title" required />
+                <label htmlFor="complaint-description">Description</label>
+                <textarea id="complaint-description" name="description" value={complaintData.description} onChange={handleComplaintChange} placeholder="Describe what happened and where..." rows="4" required />
+                <label htmlFor="complaint-gallery-input">Photo Evidence <span className="optional-label">Optional · up to 5 MB</span></label>
+                <input id="complaint-gallery-input" className="photo-input" type="file" accept="image/*" onChange={handlePhotoChange} />
+                <label htmlFor="complaint-gallery-input" className="photo-picker">＋ Choose a photo</label>
+                {photoPreview && (
+                  <div className="photo-preview">
+                    <img src={photoPreview} alt="Selected complaint evidence preview" />
+                    <button type="button" onClick={handleRemovePhoto}>Remove photo</button>
+                  </div>
+                )}
+                <button type="submit" className="register-button" disabled={photoUploading}>
+                  {photoUploading ? 'Uploading Photo...' : 'Submit Complaint'}
+                </button>
+                <button type="button" className="wizard-back" onClick={() => setComplaintStep(2)}>Back to Location</button>
+              </section>
+            )}
           </form>
         </div>
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
       </main>
     )
   }
 
   // MY COMPLAINTS TRACKING PAGE
   if (currentPage === 'my-complaints') {
+    const filteredComplaints = myComplaints.filter((complaint) => {
+      const status = complaint.status || 'Pending'
+      const matchesStatus = complaintFilter === 'All' || status === complaintFilter
+      const searchTerm = complaintSearch.trim().toLowerCase()
+      const matchesSearch = !searchTerm
+        || (complaint.title || '').toLowerCase().includes(searchTerm)
+        || (complaint.location || '').toLowerCase().includes(searchTerm)
+      return matchesStatus && matchesSearch
+    })
+
     return (
-      <main className="register-screen">
-        <div className="register-card">
+      <main className="app-screen screen-with-nav">
+        <header className="screen-titlebar">
+          <button type="button" className="titlebar-back" aria-label="Back to home" onClick={() => setCurrentPage('dashboard')}>←</button>
           <h1>My Complaints</h1>
-          <p>Track the progress of the issues you have reported.</p>
+          <span className="titlebar-spacer" />
+        </header>
 
-          {complaintsLoading ? (
-            <p>Loading your complaints...</p>
-          ) : myComplaints.length === 0 ? (
-            <p>You have not submitted any complaints yet.</p>
-          ) : (
-            <div className="complaints-list">
-              {myComplaints.map((complaint) => (
-                <div className="complaint-item" key={complaint.id}>
-                  <h3>{complaint.title}</h3>
-                  <p><strong>Report ID:</strong> {complaint.id}</p>
-                  <p><strong>Category:</strong> {complaint.category}</p>
-                  <p><strong>Location:</strong> {complaint.location}</p>
-                  <p><strong>Description:</strong> {complaint.description}</p>
-                  {complaint.photoUrl && (
-                    <div style={{ margin: '10px 0', textAlign: 'left' }}>
-                      <strong>Attached Photo:</strong>
-                      <a href={complaint.photoUrl} target="_blank" rel="noreferrer">
-                        <img src={complaint.photoUrl} alt="Your complaint evidence" style={{ display: 'block', width: '100%', maxWidth: '260px', maxHeight: '200px', objectFit: 'cover', borderRadius: '10px', marginTop: '8px' }} />
-                      </a>
-                    </div>
-                  )}
-                  <p>
-                    <strong>Date:</strong>{' '}
-                    {complaint.createdAt?.toDate
-                      ? complaint.createdAt.toDate().toLocaleString()
-                      : 'Date unavailable'}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{' '}
-                    <span className={`complaint-status ${(complaint.status || 'Pending').toLowerCase().replace(/\s+/g, '-')}`}>
-                      {complaint.status || 'Pending'}
-                    </span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            type="button"
-            className="register-button"
-            onClick={handleViewMyComplaints}
-          >
-            Refresh Complaints
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setCurrentPage('dashboard')}
-          >
-            Back to Dashboard
-          </button>
+        <div className="filter-pills" role="tablist" aria-label="Filter complaints by status">
+          {['All', 'Pending', 'In Progress', 'Resolved'].map((filter) => (
+            <button type="button" role="tab" aria-selected={complaintFilter === filter} className={complaintFilter === filter ? 'selected' : ''} key={filter} onClick={() => setComplaintFilter(filter)}>{filter}</button>
+          ))}
         </div>
+
+        <label className="search-control">
+          <span aria-hidden="true">⌕</span>
+          <input type="search" value={complaintSearch} onChange={(event) => setComplaintSearch(event.target.value)} placeholder="Search by title or location..." aria-label="Search by title or location" />
+        </label>
+
+        {complaintsLoading ? (
+          <p className="empty-state">Loading your complaints...</p>
+        ) : myComplaints.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">▤</span>
+            <h2>No complaints yet</h2>
+            <p>Your reported campus issues will appear here.</p>
+          </div>
+        ) : filteredComplaints.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">⌕</span>
+            <h2>No matching complaints</h2>
+            <p>Try another search or status filter.</p>
+          </div>
+        ) : (
+          <div className="complaints-list">
+            {filteredComplaints.map((complaint) => (
+              <button className="complaint-item complaint-list-card" key={complaint.id} onClick={() => { setSelectedComplaint(complaint); setCurrentPage('complaint-details') }}>
+                <span className="issue-icon">{categoryIcons[complaint.category] || categoryIcons.Other}</span>
+                <span className="issue-card-content">
+                  <strong>{complaint.title || 'Untitled complaint'}</strong>
+                  <span>{complaint.location || 'Location unavailable'} · {formatComplaintDate(complaint.createdAt)}</span>
+                </span>
+                <span className={`complaint-status ${(complaint.status || 'Pending').toLowerCase().replace(/\s+/g, '-')}`}>{complaint.status || 'Pending'}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
       </main>
     )
   }
 
   // STUDENT / FACULTY DASHBOARD
   if (currentPage === 'dashboard') {
+    const pendingCount = myComplaints.filter((item) => (item.status || 'Pending') === 'Pending').length
+    const progressCount = myComplaints.filter((item) => item.status === 'In Progress').length
+    const resolvedCount = myComplaints.filter((item) => item.status === 'Resolved').length
+    const initials = `${userData?.firstName?.[0] || 'S'}${userData?.lastName?.[0] || ''}`.toUpperCase()
+
     return (
-      <main className="app-screen" style={{ paddingBottom: '80px' }}>
-        
-        <div className="screen-header" style={{ textAlign: 'left', marginTop: '10px' }}>
-          <p style={{ margin: 0 }}>Good Morning,</p>
-          <h1 style={{ fontSize: '24px' }}>{userData?.firstName || 'Student'} 👋</h1>
-        </div>
+      <main className="app-screen screen-with-nav dashboard-screen">
+        <header className="dashboard-topbar">
+          <div className="user-greeting">
+            <span className="avatar">{initials}</span>
+            <div><p>Good Morning,</p><h1>{userData?.firstName || 'Student'}</h1></div>
+          </div>
+          <button className="icon-button notification-button" aria-label="Notifications" onClick={() => setCurrentPage('notifications')}>🔔<span /></button>
+        </header>
 
-        <div className="register-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', color: '#142b4a', marginBottom: '16px' }}>Something broken? Report it now!</h2>
-          <button
-            className="btn-primary"
-            style={{ margin: 0 }}
-            onClick={() => setCurrentPage('complaint')}
-          >
-            + Report an Issue
+        <section className="hero-card">
+          <div className="hero-copy">
+            <span className="hero-kicker">CAMPUSFIX</span>
+            <h2>Something broken?<br />Report it now!</h2>
+            <button type="button" onClick={() => { setComplaintStep(1); setCurrentPage('complaint') }}>＋ Report an Issue</button>
+          </div>
+          <span className="hero-wrench" aria-hidden="true">🔧</span>
+        </section>
+
+        <section className="summary-section" aria-label="Complaint status summary">
+          <div className="summary-card pending-summary"><strong>{pendingCount}</strong><span>Pending</span></div>
+          <div className="summary-card progress-summary"><strong>{progressCount}</strong><span>In Progress</span></div>
+          <div className="summary-card resolved-summary"><strong>{resolvedCount}</strong><span>Resolved</span></div>
+        </section>
+
+        <section className="recent-section">
+          <div className="section-heading">
+            <div><span className="eyebrow">STAY IN THE LOOP</span><h2>Recent Complaints</h2></div>
+            <button type="button" onClick={handleViewMyComplaints}>View All <span>→</span></button>
+          </div>
+          {complaintsLoading ? (
+            <p className="empty-state compact">Loading your recent reports...</p>
+          ) : myComplaints.length === 0 ? (
+            <div className="empty-state compact"><p>No complaints yet. Report an issue to get started.</p></div>
+          ) : (
+            <div className="recent-list">
+              {myComplaints.slice(0, 3).map((complaint) => (
+                <button className="complaint-item issue-card" key={complaint.id} onClick={() => { setSelectedComplaint(complaint); setCurrentPage('complaint-details') }}>
+                  <span className="issue-icon">⌁</span>
+                  <span className="issue-card-content">
+                    <strong>{complaint.title || 'Untitled complaint'}</strong>
+                    <span>{complaint.category || 'Issue'} · {complaint.location || 'Location unavailable'}</span>
+                  </span>
+                  <span className={`complaint-status ${(complaint.status || 'Pending').toLowerCase().replace(/\s+/g, '-')}`}>{complaint.status || 'Pending'}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
+      </main>
+    )
+  }
+
+  if (currentPage === 'submission-success') {
+    return (
+      <main className="app-screen screen-with-nav success-screen">
+        <div className="success-content">
+          <div className="success-check">✓</div>
+          <span className="eyebrow">THANK YOU FOR SPEAKING UP</span>
+          <h1>Report Submitted!</h1>
+          <p>Your complaint has been added to the CampusFix queue.</p>
+          <div className="submitted-card">
+            <span>COMPLAINT ID</span>
+            <strong>{lastSubmittedId || 'Unavailable'}</strong>
+            <div><span className="status-dot" /> Status: Pending</div>
+          </div>
+          <button className="btn-primary" onClick={handleViewMyComplaints}>Track Complaint</button>
+          <button className="secondary-button" onClick={() => setCurrentPage('dashboard')}>Back to Home</button>
+        </div>
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
+      </main>
+    )
+  }
+
+  if (currentPage === 'complaint-details') {
+    const complaintStatus = selectedComplaint?.status || 'Pending'
+    const completedJourneySteps = complaintStatus === 'Resolved'
+      ? 4
+      : complaintStatus === 'In Progress'
+        ? 2
+        : 1
+    const activeJourneyStep = complaintStatus === 'Resolved'
+      ? -1
+      : complaintStatus === 'In Progress'
+        ? 2
+        : 1
+    const journeySteps = ['Complaint Submitted', 'Under Review', 'In Progress', 'Resolved']
+
+    return (
+      <main className="app-screen screen-with-nav">
+        <header className="screen-titlebar">
+          <button type="button" className="titlebar-back" aria-label="Back to complaints" onClick={() => setCurrentPage('my-complaints')}>←</button>
+          <h1>Complaint Details</h1>
+          <span className="titlebar-spacer" />
+        </header>
+        {selectedComplaint ? (
+          <>
+            <div className={`detail-banner ${selectedComplaint.photoUrl ? 'has-photo' : ''}`}>
+              {selectedComplaint.photoUrl
+                ? <img src={selectedComplaint.photoUrl} alt={`${selectedComplaint.category || 'Campus'} complaint`} />
+                : <div className="category-banner"><span>{categoryIcons[selectedComplaint.category] || categoryIcons.Other}</span><strong>{selectedComplaint.category || 'Campus issue'}</strong></div>}
+            </div>
+            <article className="detail-card">
+              <div className="detail-id-row">
+                <span>#{(selectedComplaint.id || '').slice(0, 8).toUpperCase()}</span>
+                <span className={`complaint-status ${complaintStatus.toLowerCase().replace(/\s+/g, '-')}`}>{complaintStatus}</span>
+              </div>
+              <h2>{selectedComplaint.title || 'Untitled complaint'}</h2>
+              <div className="detail-facts">
+                <div><span className="fact-icon">⌖</span><span><small>LOCATION</small><strong>{selectedComplaint.location || 'Not specified'}</strong></span></div>
+                <div><span className="fact-icon">{categoryIcons[selectedComplaint.category] || categoryIcons.Other}</span><span><small>CATEGORY</small><strong>{selectedComplaint.category || 'Other'}</strong></span></div>
+                <div><span className="fact-icon">◷</span><span><small>REPORTED</small><strong>{formatComplaintDate(selectedComplaint.createdAt, true)}</strong></span></div>
+              </div>
+              <section className="description-section">
+                <h3>Description</h3>
+                <p>{selectedComplaint.description || 'No description provided.'}</p>
+              </section>
+            </article>
+            <section className="journey-card">
+              <h2>Fix Journey</h2>
+              <div className="journey-timeline">
+                {journeySteps.map((step, index) => {
+                  const complete = index < completedJourneySteps
+                  const active = index === activeJourneyStep
+                  return (
+                    <div className={`journey-step ${complete ? 'complete' : ''} ${active ? 'active' : ''}`} key={step}>
+                      <span className="journey-marker">{complete ? '✓' : index + 1}</span>
+                      <span className="journey-label">{step}</span>
+                      {active && <small>{complaintStatus === 'Pending' ? 'UNDER REVIEW' : 'IN PROGRESS'}</small>}
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          </>
+        ) : <p className="empty-state">Complaint details are unavailable.</p>}
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
+      </main>
+    )
+  }
+
+  if (currentPage === 'profile') {
+    const initials = `${userData?.firstName?.[0] || 'S'}${userData?.lastName?.[0] || ''}`.toUpperCase()
+    const openSettingsDialog = (title, message) => setSettingsDialog({ title, message })
+
+    return (
+      <main className="app-screen screen-with-nav">
+        <div className="page-heading"><span className="eyebrow">YOUR ACCOUNT</span><h1>Profile & Settings</h1><p>Manage your CampusFix account and preferences.</p></div>
+        <section className="profile-header-card">
+          <span className="avatar profile-avatar">{initials}</span>
+          <h2>{userData?.name || userData?.firstName || 'Student'}</h2>
+          <p>{userData?.email || auth.currentUser?.email || ''}</p>
+          <span className="profile-pr">PR: {userData?.prNumber || 'N/A'}</span>
+          <div className="profile-pills">
+            <span>{userData?.department || 'Department not set'}</span>
+            <span>{userData?.course || 'Course not set'}</span>
+          </div>
+        </section>
+        <section className="settings-card" aria-label="Profile settings">
+          <button className="settings-row" onClick={() => openSettingsDialog('Edit Profile', 'Profile changes are managed through your campus account. Contact your department administrator to update your details.')}>
+            <span className="settings-icon">♙</span><span><strong>Edit Profile</strong><small>Update your personal information</small></span><b>›</b>
+          </button>
+          <button className="settings-row" onClick={() => setCurrentPage('notifications')}>
+            <span className="settings-icon">♧</span><span><strong>Notifications</strong><small>View complaint and campus updates</small></span><b>›</b>
+          </button>
+          <button className="settings-row" onClick={() => openSettingsDialog('Appearance', 'CampusFix is using the light appearance, optimized for clear reading around campus.')}>
+            <span className="settings-icon">◐</span><span><strong>Appearance</strong><small>Light theme</small></span><b>›</b>
+          </button>
+          <button className="settings-row" onClick={() => openSettingsDialog('Help & Support', 'For help with your campus report, contact your department office or campus facilities team.')}>
+            <span className="settings-icon">?</span><span><strong>Help & Support</strong><small>Get assistance with CampusFix</small></span><b>›</b>
+          </button>
+          <button className="settings-row" onClick={() => openSettingsDialog('About CampusFix', 'CampusFix helps students and faculty report, track, and resolve campus issues.')}>
+            <span className="settings-icon">i</span><span><strong>About CampusFix</strong><small>Report. Track. Resolve.</small></span><b>›</b>
+          </button>
+        </section>
+        <button className="logout-button" onClick={async () => { await signOut(auth); setUserData(null); setMyComplaints([]); setCurrentPage('welcome') }}>Logout</button>
+        {settingsDialog && (
+          <div className="modal-backdrop" onClick={() => setSettingsDialog(null)}>
+            <section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" onClick={(event) => event.stopPropagation()}>
+              <span className="modal-mark">CF</span>
+              <h2 id="settings-modal-title">{settingsDialog.title}</h2>
+              <p>{settingsDialog.message}</p>
+              <button type="button" className="btn-primary" onClick={() => setSettingsDialog(null)}>Done</button>
+            </section>
+          </div>
+        )}
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
+      </main>
+    )
+  }
+
+  if (currentPage === 'notifications') {
+    const campusAnnouncements = [
+      { id: 'campus-update-1', type: 'Updates', title: 'Campus facilities update', message: 'Facilities teams are reviewing reports across campus today.', date: 'Campus announcement' },
+      { id: 'campus-update-2', type: 'Updates', title: 'Help keep campus accessible', message: 'Include a precise location when reporting an issue so teams can respond faster.', date: 'Campus announcement' }
+    ]
+    const complaintNotifications = myComplaints.map((complaint) => {
+      const status = complaint.status || 'Pending'
+      const statusMessages = {
+        Pending: 'Your report is awaiting review.',
+        'In Progress': 'The facilities team is working on your report.',
+        Resolved: 'Your reported issue has been resolved.'
+      }
+      return {
+        id: complaint.id,
+        type: 'Complaints',
+        title: complaint.title || 'Complaint status update',
+        message: statusMessages[status] || `Your report status is ${status}.`,
+        date: formatComplaintDate(complaint.createdAt),
+        status,
+        complaint
+      }
+    })
+    const allNotifications = [...complaintNotifications, ...campusAnnouncements]
+    const visibleNotifications = notificationFilter === 'All'
+      ? allNotifications
+      : allNotifications.filter((notification) => notification.type === notificationFilter)
+
+    return (
+      <main className="app-screen screen-with-nav">
+        <header className="screen-titlebar">
+          <button type="button" className="titlebar-back" aria-label="Back to home" onClick={() => setCurrentPage('dashboard')}>←</button>
+          <h1>Notifications</h1>
+          <span className="titlebar-spacer" />
+        </header>
+        <div className="notifications-toolbar">
+          <div className="filter-pills notification-tabs" role="tablist" aria-label="Filter notifications">
+            {['All', 'Complaints', 'Updates'].map((filter) => (
+              <button type="button" role="tab" aria-selected={notificationFilter === filter} className={notificationFilter === filter ? 'selected' : ''} key={filter} onClick={() => setNotificationFilter(filter)}>{filter}</button>
+            ))}
+          </div>
+          <button type="button" className="mark-read-button" onClick={() => setNotificationsRead(true)} disabled={notificationsRead}>
+            {notificationsRead ? 'All caught up' : 'Mark all as read'}
           </button>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '24px', textAlign: 'center' }}>
-           <div style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e1e8f0' }}>
-             <h3 style={{ fontSize: '24px', color: '#f59e0b' }}>2</h3>
-             <span style={{ fontSize: '12px', color: '#718198' }}>Pending</span>
-           </div>
-           <div style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e1e8f0' }}>
-             <h3 style={{ fontSize: '24px', color: '#3b82f6' }}>1</h3>
-             <span style={{ fontSize: '12px', color: '#718198' }}>In Progress</span>
-           </div>
-           <div style={{ background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e1e8f0' }}>
-             <h3 style={{ fontSize: '24px', color: '#10b981' }}>4</h3>
-             <span style={{ fontSize: '12px', color: '#718198' }}>Resolved</span>
-           </div>
+        <div className="notification-list">
+          {visibleNotifications.map((notification) => {
+            const content = (
+              <>
+                <span className={`notification-icon ${notification.type === 'Complaints' ? 'complaint-notification-icon' : ''}`}>{notification.type === 'Complaints' ? categoryIcons[notification.complaint.category] || categoryIcons.Other : '⌂'}</span>
+                <span className="notification-copy">
+                  <strong>{notification.title}</strong>
+                  <span>{notification.message}</span>
+                  <small>{notification.date}</small>
+                </span>
+                {notification.status && <span className={`complaint-status ${notification.status.toLowerCase().replace(/\s+/g, '-')}`}>{notification.status}</span>}
+                {!notificationsRead && <span className="unread-dot" aria-label="Unread" />}
+              </>
+            )
+            return notification.complaint ? (
+              <button type="button" className="notification-card" key={notification.id} onClick={() => { setSelectedComplaint(notification.complaint); setCurrentPage('complaint-details') }}>{content}</button>
+            ) : (
+              <article className="notification-card" key={notification.id}>{content}</article>
+            )
+          })}
         </div>
-
-        {/* BOTTOM NAVIGATION BAR */}
-        <nav className="bottom-nav">
-          <button className="nav-item active" onClick={() => setCurrentPage('dashboard')}>
-            <span className="nav-icon">🏠</span>
-            Home
-          </button>
-          <button className="nav-item" onClick={handleViewMyComplaints}>
-            <span className="nav-icon">📋</span>
-            My Issues
-          </button>
-          <button className="nav-item" onClick={() => setCurrentPage('complaint')}>
-            <span className="nav-icon">➕</span>
-            Report
-          </button>
-          <button className="nav-item" onClick={() => setCurrentPage('profile')}>
-            <span className="nav-icon">👤</span>
-            Profile
-          </button>
-        </nav>
+        <BottomNavigation currentPage={currentPage} setCurrentPage={setCurrentPage} onViewMyComplaints={handleViewMyComplaints} />
       </main>
     )
   }
 
   // WELCOME PAGE (Mobile UI)
   return (
-    <main className="app-screen" style={{ padding: 0, background: '#fff' }}>
+    <main className="app-screen" style={{ padding: 0, background: '#f5f8fc' }}>
       <div style={{ padding: '40px 24px 20px', textAlign: 'center' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#142b4a', fontSize: '24px', fontWeight: '800' }}>
           <div style={{ width: '32px', height: '32px', background: '#142b4a', borderRadius: '8px', color: 'white', display: 'grid', placeItems: 'center', fontSize: '18px' }}>CF</div>
