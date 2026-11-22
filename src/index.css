@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;800&display=swap');
+
+:root {
+  --primary-blue: #142b4a;
+  --secondary-blue: #2f649b;
+  --accent-blue: #4778a9;
+  --bg-color: #f8fafc;
+  --text-main: #172b45;
+  --text-muted: #718198;
+  --white: #ffffff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Removes blue tap highlight on mobile devices */
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: var(--bg-color);
+  position: relative;
+  /* Removed the 480px max-width so the app scales natively on Android screens */
+}
+
+/* Hide scrollbar for a native mobile app feel */
+::-webkit-scrollbar {
+  display: none;
+}
