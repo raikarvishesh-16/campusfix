@@ -627,23 +627,25 @@ function App() {
     e.preventDefault()
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        authorityData.email.trim(),
-        authorityData.password
-      )
+      const { email, password } = authorityData
+      const normalizedEmail = email.trim().toLowerCase()
+      const cred = await signInWithEmailAndPassword(auth, normalizedEmail, password)
+      const authSnap = await getDoc(doc(db, 'authorized_authorities', normalizedEmail))
 
-      const userDoc = await getDoc(
-        doc(db, "users", userCredential.user.uid)
-      )
-
-      if (!userDoc.exists() || userDoc.data().role !== "authority") {
+      if (!authSnap.exists() || authSnap.data().active !== true) {
         await signOut(auth)
-        alert("Access denied. Higher Authority account required.")
+        alert("Access Denied: Your email is not authorized for Higher Authority access.")
         return
       }
 
-      alert("Higher Authority login successful!")
+      const authorityProfile = authSnap.data()
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        email: normalizedEmail,
+        role: 'authority',
+        name: authorityProfile.name || 'Authority',
+        designation: authorityProfile.designation || 'Official'
+      }, { merge: true })
+
       setCurrentPage('authority-dashboard')
       await handleLoadAuthorityComplaints()
     } catch (error) {
